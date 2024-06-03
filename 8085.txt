@@ -1,0 +1,71 @@
+1.Да се напише еквивалентна асемблерска програма на соодветната програма
+напишана во виш програмски јазик. 
+
+ #define N 30
+void main()
+{
+ int x[50], y[50], z[50];
+ for (int i=1; i<=N; i++)
+ {
+ z[i]=10;
+ x[i]=4*y[i];
+ }
+}
+
+Решение .
+
+; Define constants and base addresses
+N_value:  db 30
+x_base:   ds 100  ; Allocate 100 bytes for x array (50 * 2 bytes each)
+y_base:   ds 100  ; Allocate 100 bytes for y array (50 * 2 bytes each)
+z_base:   ds 100  ; Allocate 100 bytes for z array (50 * 2 bytes each)
+
+; Initialize program
+org 1000h
+
+start:
+    mvi c, 1          ; Initialize loop counter i to 1
+
+loop_start:
+    lxi d, N_value    ; Load N value into DE pair
+    ldax d
+    cmp c             ; Compare i with N
+    jz loop_end       ; If i > N, exit loop
+
+    ; Calculate z[i] address and set to 10
+    lxi h, z_base     ; Load base address of z array into HL
+    mov a, c          ; Move i to A register
+    call calc_offset  ; Calculate offset for z[i]
+    mov m, 10         ; Set z[i] = 10
+
+    ; Calculate x[i] = 4 * y[i]
+    lxi h, y_base     ; Load base address of y array into HL
+    mov a, c          ; Move i to A register
+    call calc_offset  ; Calculate offset for y[i]
+    mov a, m          ; Load y[i] into A register
+    mov b, a          ; Move y[i] to B register
+    mov a, b
+    add a             ; y[i] * 2
+    mov b, a
+    add a             ; y[i] * 4
+    lxi h, x_base     ; Load base address of x array into HL
+    mov a, c          ; Move i to A register
+    call calc_offset  ; Calculate offset for x[i]
+    mov m, a          ; Set x[i] = 4 * y[i]
+
+    ; Increment loop counter
+    inr c
+    jmp loop_start
+
+loop_end:
+    hlt               ; Halt the program
+
+; Subroutine to calculate the offset
+calc_offset:
+    mov l, a          ; Offset = i
+    mov h, 0          ; Clear H register (HL = i)
+    dad h             ; HL = HL * 2 (2 bytes per element)
+    dad h             ; HL = HL * 2 (4 bytes per element, if necessary)
+    ret
+
+
